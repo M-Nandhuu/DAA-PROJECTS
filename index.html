@@ -1,0 +1,733 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive Sorting Visualizer</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f1f5f9;
+    color: #1e293b;
+    min-height: 100vh;
+}
+
+header {
+    background: #172554;
+    color: white;
+    text-align: center;
+    padding: 25px 15px;
+}
+
+header h1 {
+    margin-bottom: 10px;
+    font-size: 30px;
+}
+
+header p {
+    color: #cbd5e1;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 25px auto;
+    padding: 0 18px;
+}
+
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px #0000000d;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 140px;
+}
+
+label {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+select, button {
+    padding: 11px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+}
+
+button {
+    cursor: pointer;
+    font-weight: bold;
+    border: none;
+    background: #2563eb;
+    color: white;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.secondary {
+    background: #475569;
+}
+
+.success {
+    background: #059669;
+}
+
+.danger {
+    background: #dc2626;
+}
+
+input[type="range"] {
+    width: 100%;
+    cursor: pointer;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.stat-card {
+    background: white;
+    padding: 18px;
+    text-align: center;
+    border-radius: 10px;
+    box-shadow: 0 3px 12px #0000000d;
+}
+
+.stat-card h3 {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.stat-card p {
+    color: #1d4ed8;
+    font-size: 25px;
+    font-weight: bold;
+}
+
+.visualizer {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px #0000000d;
+}
+
+.visualizer h2 {
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+#status {
+    margin-bottom: 15px;
+    color: #475569;
+    font-size: 14px;
+}
+
+#bars {
+    height: 350px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 3px;
+    padding: 12px 5px 0;
+    border-bottom: 2px solid #cbd5e1;
+    overflow: hidden;
+}
+
+.bar {
+    flex: 1;
+    max-width: 45px;
+    min-width: 2px;
+    background: #60a5fa;
+    border-radius: 4px 4px 0 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 5px;
+    color: #172554;
+    font-size: 11px;
+    transition: height 0.12s ease, background 0.12s ease;
+}
+
+.bar-label {
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-top: 18px;
+    font-size: 13px;
+}
+
+.legend span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dot {
+    width: 13px;
+    height: 13px;
+    display: inline-block;
+    border-radius: 3px;
+}
+
+.info {
+    background: white;
+    margin-top: 20px;
+    padding: 22px;
+    border-radius: 12px;
+    line-height: 1.7;
+}
+
+.info h2 {
+    margin-bottom: 10px;
+    color: #1d4ed8;
+}
+
+.info ul {
+    padding-left: 22px;
+}
+
+footer {
+    text-align: center;
+    padding: 22px;
+    color: #64748b;
+}
+
+@media (max-width: 600px) {
+    header h1 {
+        font-size: 23px;
+    }
+
+    .stats {
+        gap: 8px;
+    }
+
+    .stat-card {
+        padding: 12px 5px;
+    }
+
+    .stat-card p {
+        font-size: 20px;
+    }
+
+    #bars {
+        height: 280px;
+    }
+
+    .bar {
+        font-size: 8px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Interactive Sorting Visualizer</h1>
+    <p>Understand sorting algorithms through animation</p>
+</header>
+
+<main class="container">
+
+    <section class="controls">
+
+        <div class="control-group">
+            <label for="algorithm">Choose Algorithm</label>
+            <select id="algorithm">
+                <option value="bubble">Bubble Sort</option>
+                <option value="selection">Selection Sort</option>
+                <option value="insertion">Insertion Sort</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="size">Array Size: <span id="sizeValue">25</span></label>
+            <input type="range" id="size" min="5" max="60" value="25">
+        </div>
+
+        <div class="control-group">
+            <label for="speed">Speed: <span id="speedValue">50</span>%</label>
+            <input type="range" id="speed" min="1" max="100" value="50">
+        </div>
+
+        <button id="generate" class="secondary">New Array</button>
+        <button id="start" class="success">Start Sorting</button>
+        <button id="pause" disabled>Pause</button>
+        <button id="reset" class="danger">Reset</button>
+
+    </section>
+
+    <section class="stats">
+
+        <div class="stat-card">
+            <h3>Comparisons</h3>
+            <p id="comparisons">0</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Swaps / Shifts</h3>
+            <p id="swaps">0</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Time Taken</h3>
+            <p id="time">0.00 s</p>
+        </div>
+
+    </section>
+
+    <section class="visualizer">
+        <h2 id="algorithmTitle">Bubble Sort</h2>
+        <p id="status" role="status">Generate an array or press Start Sorting.</p>
+
+        <div id="bars" aria-label="Array visualization"></div>
+
+        <div class="legend">
+            <span><i class="dot" style="background:#60a5fa"></i> Unsorted</span>
+            <span><i class="dot" style="background:#f59e0b"></i> Comparing</span>
+            <span><i class="dot" style="background:#ef4444"></i> Swapping / Moving</span>
+            <span><i class="dot" style="background:#10b981"></i> Sorted</span>
+        </div>
+    </section>
+
+    <section class="info">
+        <h2>About the Algorithms</h2>
+
+        <h3>1. Bubble Sort</h3>
+        <p>Compares adjacent numbers and swaps them when they are in the wrong order.</p>
+
+        <h3>2. Selection Sort</h3>
+        <p>Finds the smallest number in the unsorted part and places it in the correct position.</p>
+
+        <h3>3. Insertion Sort</h3>
+        <p>Takes one number at a time and inserts it into its correct position in the sorted part.</p>
+
+        <h3>Project Objectives</h3>
+        <ul>
+            <li>Understand how sorting algorithms work.</li>
+            <li>Visualize comparisons and movements of numbers.</li>
+            <li>Compare different sorting techniques.</li>
+            <li>Learn basic programming concepts using JavaScript.</li>
+        </ul>
+    </section>
+
+</main>
+
+<footer>
+    Interactive Sorting Visualizer | Student Project
+</footer>
+
+<script>
+const barsContainer = document.getElementById("bars");
+const sizeInput = document.getElementById("size");
+const speedInput = document.getElementById("speed");
+const algorithmSelect = document.getElementById("algorithm");
+
+const startButton = document.getElementById("start");
+const pauseButton = document.getElementById("pause");
+const resetButton = document.getElementById("reset");
+const generateButton = document.getElementById("generate");
+
+let array = [];
+let comparisons = 0;
+let swaps = 0;
+let running = false;
+let paused = false;
+let stopRequested = false;
+let startTime = 0;
+let elapsedBeforePause = 0;
+let timerId = null;
+
+function generateArray() {
+    stopSorting();
+
+    array = [];
+
+    for (let i = 0; i < Number(sizeInput.value); i++) {
+        array.push(Math.floor(Math.random() * 95) + 5);
+    }
+
+    comparisons = 0;
+    swaps = 0;
+    elapsedBeforePause = 0;
+
+    updateStats(0);
+    drawBars();
+    setStatus("New random array generated.");
+}
+
+function drawBars(colors = {}) {
+    barsContainer.innerHTML = "";
+
+    const showLabels = array.length <= 30;
+
+    array.forEach((value, index) => {
+        const bar = document.createElement("div");
+
+        bar.className = "bar";
+        bar.style.height = value + "%";
+        bar.style.background = colors[index] || "#60a5fa";
+
+        if (showLabels) {
+            const label = document.createElement("span");
+            label.className = "bar-label";
+            label.textContent = value;
+            bar.appendChild(label);
+        }
+
+        barsContainer.appendChild(bar);
+    });
+}
+
+function updateStats(seconds) {
+    document.getElementById("comparisons").textContent = comparisons;
+    document.getElementById("swaps").textContent = swaps;
+    document.getElementById("time").textContent = seconds.toFixed(2) + " s";
+}
+
+function setStatus(message) {
+    document.getElementById("status").textContent = message;
+}
+
+function getDelay() {
+    return 510 - Number(speedInput.value) * 5;
+}
+
+function sleep(milliseconds) {
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+async function waitIfPaused() {
+    while (paused && !stopRequested) {
+        await sleep(100);
+    }
+
+    return !stopRequested;
+}
+
+function stopSorting() {
+    stopRequested = true;
+    paused = false;
+    running = false;
+
+    if (timerId !== null) {
+        clearInterval(timerId);
+        timerId = null;
+    }
+
+    startButton.disabled = false;
+    pauseButton.disabled = true;
+    pauseButton.textContent = "Pause";
+}
+
+function updateTimer() {
+    const seconds = elapsedBeforePause +
+        (paused ? 0 : (Date.now() - startTime) / 1000);
+
+    updateStats(seconds);
+}
+
+async function animate(colors = {}) {
+    if (!(await waitIfPaused())) return false;
+
+    drawBars(colors);
+    await sleep(getDelay());
+
+    return !stopRequested;
+}
+
+async function compare(i, j) {
+    comparisons++;
+
+    const colors = {};
+    colors[i] = "#f59e0b";
+    colors[j] = "#f59e0b";
+
+    return await animate(colors);
+}
+
+async function swap(i, j) {
+    const colors = {};
+    colors[i] = "#ef4444";
+    colors[j] = "#ef4444";
+
+    if (!(await animate(colors))) return false;
+
+    [array[i], array[j]] = [array[j], array[i]];
+    swaps++;
+
+    return await animate();
+}
+
+async function bubbleSort() {
+    const n = array.length;
+
+    for (let i = 0; i < n - 1; i++) {
+        let changed = false;
+
+        for (let j = 0; j < n - i - 1; j++) {
+            if (!(await compare(j, j + 1))) return false;
+
+            if (array[j] > array[j + 1]) {
+                if (!(await swap(j, j + 1))) return false;
+                changed = true;
+            }
+        }
+
+        if (!changed) break;
+    }
+
+    return true;
+}
+
+async function selectionSort() {
+    const n = array.length;
+
+    for (let i = 0; i < n - 1; i++) {
+        let minimum = i;
+
+        for (let j = i + 1; j < n; j++) {
+            if (!(await compare(minimum, j))) return false;
+
+            if (array[j] < array[minimum]) {
+                minimum = j;
+            }
+        }
+
+        if (minimum !== i) {
+            if (!(await swap(i, minimum))) return false;
+        }
+    }
+
+    return true;
+}
+
+async function insertionSort() {
+    for (let i = 1; i < array.length; i++) {
+        let key = array[i];
+        let j = i - 1;
+
+        while (j >= 0) {
+            if (!(await compare(j, i))) return false;
+
+            if (array[j] > key) {
+                const colors = {};
+                colors[j] = "#ef4444";
+                colors[j + 1] = "#ef4444";
+
+                if (!(await animate(colors))) return false;
+
+                array[j + 1] = array[j];
+                swaps++;
+
+                if (!(await animate())) return false;
+
+                j--;
+            } else {
+                break;
+            }
+        }
+
+        if (stopRequested) return false;
+
+        if (!(await waitIfPaused())) return false;
+
+        array[j + 1] = key;
+
+        const colors = {};
+        colors[j + 1] = "#10b981";
+
+        if (!(await animate(colors))) return false;
+    }
+
+    return true;
+}
+
+function showSortedArray() {
+    const colors = {};
+
+    array.forEach((value, index) => {
+        colors[index] = "#10b981";
+    });
+
+    drawBars(colors);
+}
+
+async function startSorting() {
+    if (running) return;
+
+    running = true;
+    paused = false;
+    stopRequested = false;
+
+    startButton.disabled = true;
+    pauseButton.disabled = false;
+    generateButton.disabled = true;
+    resetButton.disabled = true;
+    algorithmSelect.disabled = true;
+    sizeInput.disabled = true;
+
+    comparisons = 0;
+    swaps = 0;
+    elapsedBeforePause = 0;
+
+    startTime = Date.now();
+
+    timerId = setInterval(updateTimer, 100);
+
+    const algorithm = algorithmSelect.value;
+
+    const names = {
+        bubble: "Bubble Sort",
+        selection: "Selection Sort",
+        insertion: "Insertion Sort"
+    };
+
+    document.getElementById("algorithmTitle").textContent =
+        names[algorithm];
+
+    setStatus(names[algorithm] + " is running...");
+
+    let completed = false;
+
+    try {
+        if (algorithm === "bubble") {
+            completed = await bubbleSort();
+        } else if (algorithm === "selection") {
+            completed = await selectionSort();
+        } else {
+            completed = await insertionSort();
+        }
+    } catch (error) {
+        setStatus("An error occurred. Please reset and try again.");
+        console.error(error);
+    }
+
+    if (timerId !== null) {
+        clearInterval(timerId);
+        timerId = null;
+    }
+
+    if (completed && !stopRequested) {
+        showSortedArray();
+        setStatus("Sorting completed successfully!");
+    } else if (stopRequested) {
+        setStatus("Sorting stopped. Press Reset to start again.");
+    }
+
+    const totalTime = elapsedBeforePause +
+        (paused ? 0 : (Date.now() - startTime) / 1000);
+
+    updateStats(totalTime);
+
+    running = false;
+    paused = false;
+    stopRequested = false;
+
+    startButton.disabled = false;
+    pauseButton.disabled = true;
+    pauseButton.textContent = "Pause";
+    generateButton.disabled = false;
+    resetButton.disabled = false;
+    algorithmSelect.disabled = false;
+    sizeInput.disabled = false;
+}
+
+function togglePause() {
+    if (!running) return;
+
+    if (!paused) {
+        elapsedBeforePause += (Date.now() - startTime) / 1000;
+        paused = true;
+        pauseButton.textContent = "Resume";
+        setStatus("Sorting paused.");
+    } else {
+        paused = false;
+        startTime = Date.now();
+        pauseButton.textContent = "Pause";
+        setStatus("Sorting resumed...");
+    }
+
+    updateTimer();
+}
+
+function resetArray() {
+    stopSorting();
+
+    comparisons = 0;
+    swaps = 0;
+    elapsedBeforePause = 0;
+
+    updateStats(0);
+    drawBars();
+    setStatus("Reset complete. Press Start Sorting.");
+}
+
+sizeInput.addEventListener("input", () => {
+    document.getElementById("sizeValue").textContent = sizeInput.value;
+    generateArray();
+});
+
+speedInput.addEventListener("input", () => {
+    document.getElementById("speedValue").textContent = speedInput.value;
+});
+
+generateButton.addEventListener("click", generateArray);
+startButton.addEventListener("click", startSorting);
+pauseButton.addEventListener("click", togglePause);
+resetButton.addEventListener("click", resetArray);
+
+algorithmSelect.addEventListener("change", () => {
+    const names = {
+        bubble: "Bubble Sort",
+        selection: "Selection Sort",
+        insertion: "Insertion Sort"
+    };
+
+    document.getElementById("algorithmTitle").textContent =
+        names[algorithmSelect.value];
+
+    setStatus("Selected " + names[algorithmSelect.value] + ".");
+});
+
+generateArray();
+</script>
+
+</body>
+</html>
+
